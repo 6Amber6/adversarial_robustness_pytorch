@@ -49,8 +49,7 @@ def parser_train():
     parser.add_argument('--debug', action='store_true', default=False, 
                         help='Debug code. Run 1 epoch of training and evaluation.')
     parser.add_argument('--mart', action='store_true', default=False, help='MART training.')
-    parser.add_argument('--cutmix', action='store_true', help='Use CutMix augmentation.')
-    parser.add_argument('--cutmix-size', type=int, default=20, help='Fixed CutMix window size.')
+    parser.add_argument('--cutmix', action='store_true', help='Use CutMix augmentation (Beta(1,1) sampling).')
     parser.add_argument('--ls', '--label-smoothing', type=float, default=0.1, dest='label_smoothing',
                         help='Label smoothing factor (default: 0.1).')
     

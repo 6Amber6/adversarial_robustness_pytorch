@@ -89,8 +89,7 @@ class WATrainer(Trainer):
             x, y = x.to(device), y.to(device)
             
             if self.params.cutmix:
-                x, y = cutmix(x, y, cut_size=self.params.cutmix_size,
-                              num_classes=self.info['num_classes'])
+                x, y = cutmix(x, y, num_classes=self.info['num_classes'])
                 y = y.to(device)
             
             if adversarial:
