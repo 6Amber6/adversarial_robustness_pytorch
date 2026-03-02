@@ -51,6 +51,8 @@ def parser_train():
     parser.add_argument('--mart', action='store_true', default=False, help='MART training.')
     parser.add_argument('--cutmix', action='store_true', help='Use CutMix augmentation.')
     parser.add_argument('--cutmix-size', type=int, default=20, help='Fixed CutMix window size.')
+    parser.add_argument('--ls', '--label-smoothing', type=float, default=0.1, dest='label_smoothing',
+                        help='Label smoothing factor (default: 0.1).')
     
     parser.add_argument('--unsup-fraction', type=float, default=0.7, help='Ratio of unlabelled data to labelled data.')
     parser.add_argument('--aux-data-filename', type=str, help='Path to additional Tiny Images data.', 

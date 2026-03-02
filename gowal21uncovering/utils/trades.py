@@ -83,9 +83,12 @@ def trades_loss(model, x_natural, y, optimizer, step_size=0.003, epsilon=0.031, 
     # calculate robust loss
     logits_natural = model(x_natural)
     logits_adv = model(x_adv)
-    # Support soft labels (e.g. from CutMix): when y has shape (N, C), use soft CE
+    # Support soft labels (e.g. from CutMix): when y has shape (N, C), use soft CE with label smoothing
     if y.dim() == 2:
-        loss_natural = -(y * F.log_softmax(logits_natural, dim=1)).sum(dim=1).mean()
+        # y is already soft label (from CutMix), apply label smoothing on top
+        num_classes = y.size(1)
+        y_smooth = (1 - label_smoothing) * y + label_smoothing / num_classes
+        loss_natural = -(y_smooth * F.log_softmax(logits_natural, dim=1)).sum(dim=1).mean()
         y_acc = y.argmax(dim=1)
     else:
         loss_natural = criterion_ce(logits_natural, y)

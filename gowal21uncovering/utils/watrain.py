@@ -128,7 +128,8 @@ class WATrainer(Trainer):
         """
         loss, batch_metrics = trades_loss(self.model, x, y, self.optimizer, step_size=self.params.attack_step, 
                                           epsilon=self.params.attack_eps, perturb_steps=self.params.attack_iter, 
-                                          beta=beta, attack=self.params.attack)
+                                          beta=beta, attack=self.params.attack,
+                                          label_smoothing=getattr(self.params, 'label_smoothing', 0.1))
         return loss, batch_metrics  
 
     
