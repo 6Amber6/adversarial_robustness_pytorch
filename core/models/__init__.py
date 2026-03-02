@@ -15,7 +15,7 @@ MODELS = ['resnet18', 'resnet34', 'resnet50', 'resnet101',
           'preact-resnet18', 'preact-resnet34', 'preact-resnet50', 'preact-resnet101', 
           'wrn-28-10', 'wrn-32-10', 'wrn-34-10', 'wrn-34-20', 
           'preact-resnet18-swish', 'preact-resnet34-swish',
-          'wrn-28-10-swish', 'wrn-34-20-swish', 'wrn-70-16-swish']
+          'wrn-28-10-swish', 'wrn-34-10-swish', 'wrn-34-20-swish', 'wrn-70-16-swish']
 
 
 def create_model(name, normalize, info, device):
