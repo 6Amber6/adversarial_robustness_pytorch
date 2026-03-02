@@ -16,7 +16,7 @@ def cutmix(images, labels, cut_size=20, num_classes=10):
         augmented batch of images and labels.
     """
     batch_size, _, height, width = images.shape
-    labels = F.one_hot(labels, num_classes)
+    labels = F.one_hot(labels.long(), num_classes).float()
     
     # Fixed window size, no Beta distribution sampling
     cut_h = cut_size
