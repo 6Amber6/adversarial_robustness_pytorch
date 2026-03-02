@@ -23,6 +23,8 @@ def load_cifar10s(data_dir, use_augmentation=False, aux_take_amount=None,
     Returns:
         train dataset, test dataset. 
     """
+    if aux_data_filename == 'None':
+        aux_data_filename = None
     data_dir = re.sub('cifar10s', 'cifar10', data_dir)
     test_transform = transforms.Compose([transforms.ToTensor()])
     if use_augmentation:

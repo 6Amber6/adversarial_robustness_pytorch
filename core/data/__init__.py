@@ -68,7 +68,9 @@ def load_data(data_dir, batch_size=256, batch_size_test=256, num_workers=4, use_
         train_dataset, test_dataset, val_dataset = load_dataset_fn(data_dir=data_dir, use_augmentation=use_augmentation, 
                                                                    aux_data_filename=aux_data_filename, validation=True)
     else:
-        train_dataset, test_dataset = load_dataset_fn(data_dir=data_dir, use_augmentation=use_augmentation)
+        train_dataset, test_dataset = load_dataset_fn(
+            data_dir=data_dir, use_augmentation=use_augmentation,
+            aux_data_filename=aux_data_filename)
        
     if dataset in SEMISUP_DATASETS:
         if validation:
