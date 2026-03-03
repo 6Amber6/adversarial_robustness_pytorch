@@ -1,0 +1,18 @@
+Logging to file:  /home/tong.li003/logs/wrn34-10-cutmix-beta11/log-train.log
+Using device: cuda
+Files already downloaded and verified
+Files already downloaded and verified
+Files already downloaded and verified
+Using WA.
+WideResNet-34-10-swish uses normalization.
+
+
+
+Standard Accuracy-	Test: 9.472082%.
+RST Adversarial training for 400 epochs
+======= Epoch 1 =======
+Loss: 2.2703.	LR: 0.0080
+Standard Accuracy-	Train: 18.23%.	Test: 24.36%.
+Adversarial Accuracy-	Train: 17.80%.
+Adversarial Accuracy-	Eval: 10.35%.
+Time taken: 0:03:18
