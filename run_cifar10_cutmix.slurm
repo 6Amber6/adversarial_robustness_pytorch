@@ -3,8 +3,8 @@
 #SBATCH --partition=DGXA100
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --gres=gpu:1
-#SBATCH --cpus-per-task=8
+#SBATCH --gres=gpu:2
+#SBATCH --cpus-per-task=16
 #SBATCH --mem=128G
 #SBATCH --time=72:00:00
 #SBATCH --output=logs/%x-%j.out
@@ -14,7 +14,7 @@ set -e
 set -o pipefail
 
 source ~/.bashrc
-conda activate base
+conda activate robustness
 
 cd /home/tong.li003/adversarial_robustness_pytorch
 export PYTHONPATH=/home/tong.li003/adversarial_robustness_pytorch:$PYTHONPATH
@@ -26,10 +26,10 @@ python train-wa.py \
   --log-dir ~/logs \
   --desc wrn34-10-cutmix-beta11 \
   --data cifar10s \
-  --batch-size 1024 \
+  --batch-size 512 \
   --model wrn-34-10-swish \
   --num-adv-epochs 400 \
-  --lr 0.4 \
+  --lr 0.2 \
   --beta 6.0 \
   --unsup-fraction 0.0 \
   --aux-data-filename None \

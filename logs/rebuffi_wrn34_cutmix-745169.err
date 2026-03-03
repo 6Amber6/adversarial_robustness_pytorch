@@ -1,0 +1,26 @@
+Traceback (most recent call last):
+  File "/home/tong.li003/adversarial_robustness_pytorch/train-wa.py", line 80, in <module>
+    trainer = WATrainer(info, args)
+  File "/home/tong.li003/adversarial_robustness_pytorch/gowal21uncovering/utils/watrain.py", line 36, in __init__
+    super(WATrainer, self).__init__(info, args)
+  File "/home/tong.li003/adversarial_robustness_pytorch/core/utils/train.py", line 39, in __init__
+    self.model = create_model(args.model, args.normalize, info, device)
+  File "/home/tong.li003/adversarial_robustness_pytorch/core/models/__init__.py", line 59, in create_model
+    model = torch.nn.DataParallel(model)
+  File "/home/tong.li003/miniconda3/envs/robustness/lib/python3.10/site-packages/torch/nn/parallel/data_parallel.py", line 145, in __init__
+    _check_balance(self.device_ids)
+  File "/home/tong.li003/miniconda3/envs/robustness/lib/python3.10/site-packages/torch/nn/parallel/data_parallel.py", line 25, in _check_balance
+    dev_props = _get_devices_properties(device_ids)
+  File "/home/tong.li003/miniconda3/envs/robustness/lib/python3.10/site-packages/torch/_utils.py", line 678, in _get_devices_properties
+    return [_get_device_attr(lambda m: m.get_device_properties(i)) for i in device_ids]
+  File "/home/tong.li003/miniconda3/envs/robustness/lib/python3.10/site-packages/torch/_utils.py", line 678, in <listcomp>
+    return [_get_device_attr(lambda m: m.get_device_properties(i)) for i in device_ids]
+  File "/home/tong.li003/miniconda3/envs/robustness/lib/python3.10/site-packages/torch/_utils.py", line 659, in _get_device_attr
+    return get_member(torch.cuda)
+  File "/home/tong.li003/miniconda3/envs/robustness/lib/python3.10/site-packages/torch/_utils.py", line 678, in <lambda>
+    return [_get_device_attr(lambda m: m.get_device_properties(i)) for i in device_ids]
+  File "/home/tong.li003/miniconda3/envs/robustness/lib/python3.10/site-packages/torch/cuda/__init__.py", line 395, in get_device_properties
+    _lazy_init()  # will define _get_device_properties
+  File "/home/tong.li003/miniconda3/envs/robustness/lib/python3.10/site-packages/torch/cuda/__init__.py", line 247, in _lazy_init
+    torch._C._cuda_init()
+RuntimeError: Unrecognized CachingAllocator option: expandable_segments
