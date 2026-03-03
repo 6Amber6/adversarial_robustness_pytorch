@@ -1,11 +1,0 @@
-libibverbs: Warning: couldn't load driver 'librxe-rdmav34.so': librxe-rdmav34.so: cannot open shared object file: No such file or directory
-libibverbs: Warning: couldn't load driver 'libmlx4-rdmav34.so': libmlx4-rdmav34.so: cannot open shared object file: No such file or directory
-Epoch 1:   0%|          | 0/98 [00:00<?, ?it/s]Epoch 1:   0%|          | 0/98 [00:09<?, ?it/s]
-Traceback (most recent call last):
-  File "/home/tong.li003/adversarial_robustness_pytorch/train-wa.py", line 103, in <module>
-    res = trainer.train(train_dataloader, epoch=epoch, adversarial=True)
-  File "/home/tong.li003/adversarial_robustness_pytorch/gowal21uncovering/utils/watrain.py", line 115, in train
-    metrics = metrics.append(pd.DataFrame(batch_metrics, index=[0]), ignore_index=True)
-  File "/home/tong.li003/miniconda3/envs/robustness/lib/python3.10/site-packages/pandas/core/generic.py", line 6321, in __getattr__
-    return object.__getattribute__(self, name)
-AttributeError: 'DataFrame' object has no attribute 'append'. Did you mean: '_append'?
