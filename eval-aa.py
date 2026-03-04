@@ -31,16 +31,20 @@ from core.utils import seed
 parse = parser_eval()
 args = parse.parse_args()
 
-LOG_DIR = args.log_dir + args.desc
-with open(LOG_DIR+'/args.txt', 'r') as f:
+LOG_DIR = os.path.join(args.log_dir.rstrip('/'), args.desc)
+with open(os.path.join(LOG_DIR, 'args.txt'), 'r') as f:
     old = json.load(f)
     args.__dict__ = dict(vars(args), **old)
 
-DATA_DIR = args.data_dir + args.data + '/'
-LOG_DIR = args.log_dir + args.desc
-WEIGHTS = LOG_DIR + '/weights-best.pt'
-
-log_path = LOG_DIR + '/log-aa.log'
+# DATA_DIR: avoid double appending (args.data_dir may already be /path/data/cifar10s)
+_data_dir = args.data_dir.rstrip('/')
+if _data_dir.endswith(args.data):
+    DATA_DIR = _data_dir
+else:
+    DATA_DIR = os.path.join(_data_dir, args.data)
+LOG_DIR = os.path.join(args.log_dir.rstrip('/'), args.desc)
+WEIGHTS = os.path.join(LOG_DIR, 'weights-best.pt')
+log_path = os.path.join(LOG_DIR, 'log-aa.log')
 logger = Logger(log_path)
 
 info = get_data_info(DATA_DIR)
