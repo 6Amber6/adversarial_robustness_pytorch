@@ -76,10 +76,13 @@ def parser_eval():
     parser.add_argument('--desc', type=str, required=True, help='Description of model to be evaluated.')
     parser.add_argument('--num-samples', type=int, default=1000, help='Number of test samples.')
     
-    # eval-aa.py
+    # eval-aa.py (Linf 8/255 per paper; override args.txt when specified)
+    parser.add_argument('-a', '--attack', type=str, default=None, choices=ATTACKS + [None],
+                        help='Attack type for AA norm (default: from args.txt, else linf-pgd).')
+    parser.add_argument('--attack-eps', type=str2float, default=None, help='Epsilon for AA (default: from args.txt, else 8/255).')
     parser.add_argument('--train', action='store_true', default=False, help='Evaluate on training set.')
-    parser.add_argument('-v', '--version', type=str, default='standard', choices=['custom', 'plus', 'standard'], 
-                        help='Version of AA.')
+    parser.add_argument('-v', '--version', type=str, default='standard', choices=['custom', 'plus', 'standard'],
+                        help='AA version: standard=4 attacks, custom=2 attacks (default: standard).')
 
     # eval-adv.py
     parser.add_argument('--source', type=str, default=None, help='Path to source model for black-box evaluation.')

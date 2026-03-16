@@ -30,11 +30,22 @@ from core.utils import seed
 
 parse = parser_eval()
 args = parse.parse_args()
+_cli_attack = args.attack
+_cli_attack_eps = args.attack_eps
 
 LOG_DIR = os.path.join(args.log_dir.rstrip('/'), args.desc)
 with open(os.path.join(LOG_DIR, 'args.txt'), 'r') as f:
     old = json.load(f)
     args.__dict__ = dict(vars(args), **old)
+# CLI overrides for eval (paper: Linf 8/255, version=standard)
+if _cli_attack is not None:
+    args.attack = _cli_attack
+elif getattr(args, 'attack', None) is None:
+    args.attack = 'linf-pgd'
+if _cli_attack_eps is not None:
+    args.attack_eps = _cli_attack_eps
+elif getattr(args, 'attack_eps', None) is None:
+    args.attack_eps = 8/255
 
 # DATA_DIR: avoid double appending (args.data_dir may already be /path/data/cifar10s)
 _data_dir = args.data_dir.rstrip('/')
