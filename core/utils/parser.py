@@ -37,6 +37,8 @@ def parser_train():
     parser.add_argument('--lr', type=float, default=0.4, help='Learning rate for optimizer (SGD).')
     parser.add_argument('--weight-decay', type=float, default=5e-4, help='Optimizer (SGD) weight decay.')
     parser.add_argument('--scheduler', choices=SCHEDULERS, default='cosinew', help='Type of scheduler.')
+    parser.add_argument('--scheduler-milestones', type=int, nargs='+', default=None,
+                        help='Milestones for step scheduler (e.g. 267 for decay at 2/3 of 400 epochs).')
     parser.add_argument('--nesterov', type=str2bool, default=True, help='Use Nesterov momentum.')
     parser.add_argument('--clip-grad', type=float, default=None, help='Gradient norm clipping.')
 
@@ -49,7 +51,8 @@ def parser_train():
     parser.add_argument('--debug', action='store_true', default=False, 
                         help='Debug code. Run 1 epoch of training and evaluation.')
     parser.add_argument('--mart', action='store_true', default=False, help='MART training.')
-    parser.add_argument('--cutmix', action='store_true', help='Use CutMix augmentation (Beta(1,1) sampling).')
+    parser.add_argument('--cutmix', action='store_true', help='Use CutMix augmentation.')
+    parser.add_argument('--cutmix-size', type=int, default=None, help='Fixed CutMix window (None=Beta(1,1), 20=paper optimal).')
     parser.add_argument('--ls', '--label-smoothing', type=float, default=0.1, dest='label_smoothing',
                         help='Label smoothing factor (default: 0.1).')
     

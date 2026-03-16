@@ -99,7 +99,6 @@ if args.version == 'custom':
     adversary.apgd.n_restarts = 1
     adversary.apgd_targeted.n_restarts = 1
 
-with torch.no_grad():
-    x_adv = adversary.run_standard_evaluation(x_test, y_test, bs=BATCH_SIZE_VALIDATION)
+x_adv = adversary.run_standard_evaluation(x_test, y_test, bs=BATCH_SIZE_VALIDATION)
 
 print ('Script Completed.')

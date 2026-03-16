@@ -30,17 +30,23 @@ from gowal21uncovering.utils import WATrainer
 # Setup
 
 parse = parser_train()
-parse.add_argument('--tau', type=float, default=0.995, help='Weight averaging decay.')
+parse.add_argument('--tau', type=float, default=0.999, help='Weight averaging decay.')
 args = parse.parse_args()
 assert args.data in SEMISUP_DATASETS, f'Only data in {SEMISUP_DATASETS} is supported!'
 
+# Rebuffi et al. NeurIPS 2021: CutMix requires step decay at 2/3, not cosine
+if args.cutmix:
+    args.scheduler = 'step'
+    args.scheduler_milestones = [max(1, int(0.667 * args.num_adv_epochs))]  # decay at 2/3 of training
 
 DATA_DIR = os.path.join(args.data_dir, args.data)
 LOG_DIR = os.path.join(args.log_dir, args.desc)
 WEIGHTS = os.path.join(LOG_DIR, 'weights-best.pt')
-if os.path.exists(LOG_DIR):
+WEIGHTS_LAST = os.path.join(LOG_DIR, 'weights-last.pt')
+# Auto-resume: if weights-last.pt exists, keep LOG_DIR and resume; else start fresh
+if os.path.exists(LOG_DIR) and not os.path.exists(WEIGHTS_LAST):
     shutil.rmtree(LOG_DIR)
-os.makedirs(LOG_DIR)
+os.makedirs(LOG_DIR, exist_ok=True)
 logger = Logger(os.path.join(LOG_DIR, 'log-train.log'))
 
 with open(os.path.join(LOG_DIR, 'args.txt'), 'w') as f:
@@ -82,18 +88,30 @@ else:
     trainer = Trainer(info, args)
 last_lr = args.lr
 
+start_epoch = 1
+old_score = [0.0, 0.0]
+metrics = pd.DataFrame()
+
 if NUM_ADV_EPOCHS > 0:
     logger.log('\n\n')
-    metrics = pd.DataFrame()
     logger.log('Standard Accuracy-\tTest: {:2f}%.'.format(trainer.eval(test_dataloader)*100))
-    
-    old_score = [0.0, 0.0]
     logger.log('RST Adversarial training for {} epochs'.format(NUM_ADV_EPOCHS))
     trainer.init_optimizer(args.num_adv_epochs)
-    test_adv_acc = 0.0    
-    
+    test_adv_acc = 0.0
 
-for epoch in range(1, NUM_ADV_EPOCHS+1):
+    if args.tau and os.path.exists(WEIGHTS_LAST):
+        resumed = trainer.load_resume(WEIGHTS_LAST)
+        if resumed is not None:
+            start_epoch, old_score = resumed[0] + 1, resumed[1]
+            logger.log('Resumed from epoch {}, old_score: {:.2f} / {:.2f}'.format(
+                start_epoch - 1, old_score[0]*100, old_score[1]*100))
+            try:
+                if os.path.exists(os.path.join(LOG_DIR, 'stats_adv.csv')):
+                    metrics = pd.read_csv(os.path.join(LOG_DIR, 'stats_adv.csv'))
+            except Exception:
+                pass
+
+for epoch in range(start_epoch, NUM_ADV_EPOCHS+1):
     start = time.time()
     logger.log('======= Epoch {} ======='.format(epoch))
     
@@ -125,7 +143,8 @@ for epoch in range(1, NUM_ADV_EPOCHS+1):
     if eval_adv_acc >= old_score[1]:
         old_score[0], old_score[1] = test_acc, eval_adv_acc
         trainer.save_model(WEIGHTS)
-    trainer.save_model(os.path.join(LOG_DIR, 'weights-last.pt'))
+    save_kw = {'epoch': epoch, 'optimizer': trainer.optimizer, 'scheduler': trainer.scheduler, 'old_score': old_score}
+    trainer.save_model(WEIGHTS_LAST, **save_kw)
     
     logger.log('Time taken: {}'.format(format_time(time.time()-start)))
     metrics = pd.concat([metrics, pd.DataFrame(epoch_metrics, index=[0])], ignore_index=True)

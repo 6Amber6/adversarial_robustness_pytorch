@@ -89,7 +89,8 @@ class WATrainer(Trainer):
             x, y = x.to(device), y.to(device)
             
             if self.params.cutmix:
-                x, y = cutmix(x, y, num_classes=self.info['num_classes'])
+                cut_size = getattr(self.params, 'cutmix_size', None)
+                x, y = cutmix(x, y, num_classes=self.info['num_classes'], cut_size=cut_size)
                 y = y.to(device)
             
             if adversarial:
@@ -152,24 +153,50 @@ class WATrainer(Trainer):
         return acc
 
 
-    def save_model(self, path):
+    def save_model(self, path, epoch=None, optimizer=None, scheduler=None, old_score=None):
         """
-        Save model weights.
+        Save model weights. For resume, pass epoch, optimizer, scheduler, old_score.
         """
-        torch.save({
-            'model_state_dict': self.wa_model.state_dict(), 
+        ckpt = {
+            'model_state_dict': self.wa_model.state_dict(),
             'unaveraged_model_state_dict': self.model.state_dict()
-        }, path)
+        }
+        if epoch is not None:
+            ckpt['epoch'] = epoch
+        if optimizer is not None:
+            ckpt['optimizer_state_dict'] = optimizer.state_dict()
+        if scheduler is not None:
+            ckpt['scheduler_state_dict'] = scheduler.state_dict()
+        if old_score is not None:
+            ckpt['old_score'] = old_score
+        torch.save(ckpt, path)
 
     
     def load_model(self, path):
         """
-        Load model weights.
+        Load model weights (for eval).
         """
-        checkpoint = torch.load(path)
+        checkpoint = torch.load(path, map_location='cpu')
         if 'model_state_dict' not in checkpoint:
             raise RuntimeError('Model weights not found at {}.'.format(path))
         self.wa_model.load_state_dict(checkpoint['model_state_dict'])
+
+    
+    def load_resume(self, path):
+        """
+        Load full checkpoint for resume. Returns (epoch, old_score) or None if not resumable.
+        """
+        checkpoint = torch.load(path, map_location='cpu')
+        if 'model_state_dict' not in checkpoint or 'epoch' not in checkpoint:
+            return None
+        self.wa_model.load_state_dict(checkpoint['model_state_dict'])
+        if 'unaveraged_model_state_dict' in checkpoint:
+            self.model.load_state_dict(checkpoint['unaveraged_model_state_dict'])
+        if 'optimizer_state_dict' in checkpoint and self.optimizer is not None:
+            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        if 'scheduler_state_dict' in checkpoint and self.scheduler is not None:
+            self.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+        return checkpoint['epoch'], checkpoint.get('old_score', [0.0, 0.0])
     
 
 def ema_update(wa_model, model, global_step, decay_rate=0.995, warmup_steps=0, dynamic_decay=True):

@@ -177,7 +177,7 @@ def wideresnetwithswish(name, dataset='cifar10', num_classes=10, device='cpu'):
     Returns:
         torch.nn.Module.
     """
-    if 'cifar10' not in dataset:
+    if 'cifar10' not in dataset and 'cifar100' not in dataset:
         raise ValueError('WideResNets with Swish activation only support CIFAR-10 and CIFAR-100!')
 
     name_parts = name.split('-')

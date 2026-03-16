@@ -86,7 +86,8 @@ class Trainer(object):
             self.scheduler = torch.optim.lr_scheduler.OneCycleLR(self.optimizer, max_lr=self.params.lr, pct_start=0.25,
                                                                  steps_per_epoch=update_steps, epochs=int(num_epochs))
         elif self.params.scheduler == 'step':
-            self.scheduler = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, gamma=0.1, milestones=[100, 105])    
+            milestones = getattr(self.params, 'scheduler_milestones', None) or [100, 105]
+            self.scheduler = torch.optim.lr_scheduler.MultiStepLR(self.optimizer, gamma=0.1, milestones=milestones)    
         elif self.params.scheduler == 'cosine':
             self.scheduler = CosineLR(self.optimizer, max_lr=self.params.lr, epochs=int(num_epochs))
         elif self.params.scheduler == 'cosinew':
@@ -223,9 +224,9 @@ class Trainer(object):
         return acc
 
     
-    def save_model(self, path):
+    def save_model(self, path, **kwargs):
         """
-        Save model weights.
+        Save model weights. Extra kwargs ignored (for WATrainer resume).
         """
         torch.save({'model_state_dict': self.model.state_dict()}, path)
 

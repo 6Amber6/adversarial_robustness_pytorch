@@ -2,20 +2,25 @@ import torch
 import torch.nn.functional as F
 
 
-def cutmix(images, labels, num_classes=10):
+def cutmix(images, labels, num_classes, cut_size=None):
     """
-    CutMix with patch area ratio sampled from Beta(1,1) = Uniform(0,1)
-    This matches the Rebuffi et al. NeurIPS 2021 Table 1 results.
+    CutMix augmentation.
+    If cut_size is set: fixed window (Rebuffi et al. NeurIPS 2021, optimal=20 for 32x32).
+    If cut_size is None: Beta(1,1) sampling.
+    num_classes: must be passed (10 for CIFAR-10, 100 for CIFAR-100).
     """
     batch_size, _, height, width = images.shape
 
-    # Sample lambda from Beta(1,1) = Uniform(0,1)
-    lam = torch.distributions.Beta(1.0, 1.0).sample().item()
-
-    # Compute window size from lambda
-    cut_ratio = (1.0 - lam) ** 0.5
-    cut_h = int(height * cut_ratio)
-    cut_w = int(width * cut_ratio)
+    if cut_size is not None:
+        # Fixed window (optimal window length=20 for CIFAR-10 32x32)
+        cut_h = min(cut_size, height)
+        cut_w = min(cut_size, width)
+    else:
+        # Beta(1,1): lam = patch area ratio, cut_ratio = lam^0.5 = side length ratio
+        lam = torch.distributions.Beta(1.0, 1.0).sample().item()
+        cut_ratio = lam ** 0.5
+        cut_h = int(height * cut_ratio)
+        cut_w = int(width * cut_ratio)
 
     # Random center
     cx = torch.randint(0, width, (1,)).item()
