@@ -48,7 +48,7 @@ python train-wa-parallel.py \
   --num-adv-epochs 400 \
   --epochs-sub 50 \
   --epochs-warmup 10 \
-  --aux-weight 0.02 \
+  --aux-weight 0.0 \
   --unsup-fraction 0.0 \
   --aux-data-filename None
 

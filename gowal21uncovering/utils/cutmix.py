@@ -2,11 +2,11 @@ import torch
 import torch.nn.functional as F
 
 
-def cutmix(images, labels, num_classes, cut_size=None):
+def cutmix(images, labels, num_classes, cut_size=None, alpha=1.0, beta=1.0):
     """
     CutMix augmentation.
     If cut_size is set: fixed window (Rebuffi et al. NeurIPS 2021, optimal=20 for 32x32).
-    If cut_size is None: Beta(1,1) sampling.
+    If cut_size is None: Beta(alpha, beta) sampling (default Beta(1,1)).
     num_classes: must be passed (10 for CIFAR-10, 100 for CIFAR-100).
     """
     batch_size, _, height, width = images.shape
@@ -16,8 +16,8 @@ def cutmix(images, labels, num_classes, cut_size=None):
         cut_h = min(cut_size, height)
         cut_w = min(cut_size, width)
     else:
-        # Beta(1,1): lam = patch area ratio, cut_ratio = lam^0.5 = side length ratio
-        lam = torch.distributions.Beta(1.0, 1.0).sample().item()
+        # Beta(alpha, beta): lam = patch area ratio, cut_ratio = lam^0.5 = side length ratio
+        lam = torch.distributions.Beta(alpha, beta).sample().item()
         cut_ratio = lam ** 0.5
         cut_h = int(height * cut_ratio)
         cut_w = int(width * cut_ratio)

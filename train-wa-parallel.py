@@ -87,27 +87,37 @@ def aux_ce_loss(sub_logits_list, y, class_splits, dev, weight=0.02):
 # Backbone LR ratio schedule (parallel-specific)
 # =========================================================
 def backbone_lr_ratio(epoch, total_epochs):
-    """Sub-model backbone gets a constant fraction of the fusion FC learning rate.
-    Standard transfer learning practice: backbone_lr = fc_lr * 0.1
+    """Sub-model backbone LR ratio.
+    Higher than typical fine-tuning (0.1) because CE-pretrained features
+    need significant reorganization to become adversarially robust.
     """
-    return 0.1
+    return 0.3
 
 
 # =========================================================
 # Stage 1: train one sub-model for one epoch
 # =========================================================
-def train_ce_epoch(model, loader, optimizer):
+def train_ce_epoch(model, loader, optimizer, num_classes=None):
     model.train()
     total_loss, correct, total = 0.0, 0, 0
     for x, y in loader:
         x, y = x.to(device), y.to(device)
+        # CutMix with Beta(0.5, 0.5) — softer than Stage 2's Beta(1,1)
+        if num_classes is not None:
+            x, y = cutmix(x, y, num_classes, alpha=0.5, beta=0.5)
         optimizer.zero_grad()
         logits = model(x)
-        loss = F.cross_entropy(logits, y)
+        if y.dim() == 2:
+            # Soft labels from CutMix
+            loss = -(y * F.log_softmax(logits, dim=1)).sum(dim=1).mean()
+            y_hard = y.argmax(dim=1)
+        else:
+            loss = F.cross_entropy(logits, y)
+            y_hard = y
         loss.backward()
         optimizer.step()
         total_loss += loss.item() * x.size(0)
-        correct += (logits.argmax(1) == y).sum().item()
+        correct += (logits.argmax(1) == y_hard).sum().item()
         total += x.size(0)
     return total_loss / total, correct / total
 
@@ -315,7 +325,7 @@ if start_stage == 'sub':
         )
 
         for ep in range(1, args.epochs_sub + 1):
-            _, acc = train_ce_epoch(sub, sub_loaders[name], opt)
+            _, acc = train_ce_epoch(sub, sub_loaders[name], opt, num_classes=len(classes))
             sched.step()
             if ep % 10 == 0 or ep == args.epochs_sub:
                 test_acc_sub = eval_acc(sub, sub_test_loaders[name], device)
