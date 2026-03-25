@@ -3,7 +3,7 @@
 #SBATCH --partition=DGXA100
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --gres=gpu:2
+#SBATCH --gres=gpu:3
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=128G
 #SBATCH --time=96:00:00
@@ -19,7 +19,7 @@
 # Stage 2a: CE warmup fusion, 10 epochs
 # Stage 2b: TRADES + EMA + CutMix, 400 epochs
 #
-# NOTE: 4 sub-models (~146M params), uses 2 GPUs
+# NOTE: 4 sub-models (~146M params), uses 3 GPUs
 # ============================================================
 
 set -e
