@@ -15,7 +15,7 @@ def parser_train():
     parser = argparse.ArgumentParser(description='Standard + Adversarial Training.')
 
     parser.add_argument('--augment', type=str2bool, default=True, help='Augment training set.')
-    parser.add_argument('--batch-size', type=int, default=1024, help='Batch size for training.')
+    parser.add_argument('--batch-size', type=int, default=256, help='Batch size for training.')
     parser.add_argument('--batch-size-validation', type=int, default=512, help='Batch size for testing.')
     
     parser.add_argument('--data-dir', type=str, default='/cluster/home/rarade/data/')
@@ -34,7 +34,7 @@ def parser_train():
     
     parser.add_argument('--beta', default=None, type=float, help='Stability regularization, i.e., 1/lambda in TRADES.')
     
-    parser.add_argument('--lr', type=float, default=0.4, help='Learning rate for optimizer (SGD).')
+    parser.add_argument('--lr', type=float, default=0.1, help='Learning rate for optimizer (SGD).')
     parser.add_argument('--weight-decay', type=float, default=5e-4, help='Optimizer (SGD) weight decay.')
     parser.add_argument('--scheduler', choices=SCHEDULERS, default='cosinew', help='Type of scheduler.')
     parser.add_argument('--scheduler-milestones', type=int, nargs='+', default=None,
