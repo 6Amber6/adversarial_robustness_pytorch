@@ -21,13 +21,9 @@ class WRNWithEmbeddingSwish(WideResNet):
     def forward(self, x, return_embedding=False):
         if self.padding > 0:
             x = F.pad(x, (self.padding,) * 4)
-        if x.is_cuda:
-            if self.mean_cuda is None:
-                self.mean_cuda = self.mean.cuda()
-                self.std_cuda = self.std.cuda()
-            out = (x - self.mean_cuda) / self.std_cuda
-        else:
-            out = (x - self.mean) / self.std
+        mean = self.mean.to(x.device)
+        std = self.std.to(x.device)
+        out = (x - mean) / std
 
         out = self.init_conv(out)
         out = self.layer(out)
