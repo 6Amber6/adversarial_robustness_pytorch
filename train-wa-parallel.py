@@ -171,7 +171,11 @@ WEIGHTS_BEST = os.path.join(LOG_DIR, 'weights-best.pt')
 WEIGHTS_LAST = os.path.join(LOG_DIR, 'weights-last.pt')
 
 if os.path.exists(LOG_DIR) and not os.path.exists(WEIGHTS_LAST):
-    shutil.rmtree(LOG_DIR)
+    # Clean non-checkpoint files; keep sub-*.pt from Stage 1
+    for f in os.listdir(LOG_DIR):
+        fpath = os.path.join(LOG_DIR, f)
+        if os.path.isfile(fpath) and not f.startswith('sub-'):
+            os.remove(fpath)
 os.makedirs(LOG_DIR, exist_ok=True)
 logger = Logger(os.path.join(LOG_DIR, 'log-train.log'))
 
