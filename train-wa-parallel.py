@@ -31,6 +31,24 @@ from core.attacks import create_attack, CWLoss
 from core.metrics import accuracy
 from core.utils import format_time, Logger, seed
 from core.utils import set_bn_momentum
+
+
+def freeze_bn(model):
+    """Freeze BN layers: set to eval mode and disable gradient."""
+    for m in model.modules():
+        if isinstance(m, (nn.BatchNorm2d, nn.BatchNorm1d)):
+            m.eval()
+            for p in m.parameters():
+                p.requires_grad = False
+
+
+def unfreeze_bn(model):
+    """Unfreeze BN layers: set to train mode and enable gradient."""
+    for m in model.modules():
+        if isinstance(m, (nn.BatchNorm2d, nn.BatchNorm1d)):
+            m.train()
+            for p in m.parameters():
+                p.requires_grad = True
 from core.utils import ctx_noparamgrad_and_eval
 from core.utils import parser_train
 
@@ -87,11 +105,18 @@ def aux_ce_loss(sub_logits_list, y, class_splits, dev, weight=0.02):
 # Backbone LR ratio schedule (parallel-specific)
 # =========================================================
 def backbone_lr_ratio(epoch, total_epochs):
-    """Sub-model backbone LR ratio.
-    Higher than typical fine-tuning (0.1) because CE-pretrained features
-    need significant reorganization to become adversarially robust.
+    """Three-phase backbone LR ratio schedule.
+    Phase 1 (0-20%):  0.15 — stabilize FC, backbones adapt slowly
+    Phase 2 (20-65%): 0.50 — backbones adapt fully for adversarial features
+    Phase 3 (65%+):   0.35 — stabilize for convergence (aligns with LR decay at 67%)
     """
-    return 0.3
+    p1 = max(1, int(total_epochs * 0.2))
+    p2 = max(p1 + 1, int(total_epochs * 0.65))
+    if epoch <= p1:
+        return 0.15
+    if epoch <= p2:
+        return 0.50
+    return 0.35
 
 
 # =========================================================
@@ -492,6 +517,11 @@ start_stage = 'adv'
 if start_epoch <= 1:
     start_epoch = 1
 
+# Freeze BN after warmup (prevents adversarial examples from corrupting BN stats)
+freeze_bn(model)
+freeze_bn(wa_model)
+logger.log('  BN frozen after warmup')
+
 # Initialize scheduler for adversarial phase
 scheduler = init_scheduler(NUM_ADV_EPOCHS)
 if resume_ckpt is not None and 'scheduler_state_dict' in resume_ckpt and resume_ckpt.get('stage') == 'adv':
@@ -507,15 +537,36 @@ del resume_ckpt  # free memory
 # =========================================================
 # Stage 2b: TRADES + EMA (matches baseline train-wa.py)
 # =========================================================
+BN_UNFREEZE_EPOCH = int(NUM_ADV_EPOCHS * 0.25)  # Unfreeze BN at 25% of training
+bn_unfrozen = start_epoch > BN_UNFREEZE_EPOCH
+if bn_unfrozen:
+    unfreeze_bn(model)
+    unfreeze_bn(wa_model)
+
 logger.log(f'\n--- TRADES Training (epoch {start_epoch}-{NUM_ADV_EPOCHS}) ---')
 logger.log(f'  batch_size={args.batch_size}, lr={args.lr}, beta={args.beta}, '
            f'scheduler={args.scheduler}, tau={args.tau}')
 logger.log(f'  cutmix={args.cutmix}, label_smoothing={args.label_smoothing}')
+logger.log(f'  bn_frozen={not bn_unfrozen}, unfreeze_at={BN_UNFREEZE_EPOCH}')
 
 for epoch in range(start_epoch, NUM_ADV_EPOCHS + 1):
     start_t = time.time()
     logger.log(f'\n======= Epoch {epoch} =======')
     model.train()
+
+    # Unfreeze BN after BN_UNFREEZE_EPOCH
+    if not bn_unfrozen and epoch >= BN_UNFREEZE_EPOCH:
+        unfreeze_bn(model)
+        unfreeze_bn(wa_model)
+        # Reset BN momentum to re-estimate stats from current distribution
+        set_bn_momentum(model, momentum=1.0)
+        set_bn_momentum(wa_model, momentum=1.0)
+        bn_unfrozen = True
+        logger.log(f'  BN unfrozen at epoch {epoch}, momentum reset to 1.0')
+    elif bn_unfrozen and epoch == BN_UNFREEZE_EPOCH + 1:
+        # Restore normal BN momentum after one epoch of re-estimation
+        set_bn_momentum(model, momentum=0.01)
+        set_bn_momentum(wa_model, momentum=0.01)
 
     # Get base lr from FC group (scheduler controls this)
     fc_lr = args.lr
@@ -547,8 +598,9 @@ for epoch in range(start_epoch, NUM_ADV_EPOCHS + 1):
         x, y = data
         x, y = x.to(device), y.to(device)
 
-        # Save hard labels for aux loss before CutMix
+        # Save clean x and hard labels for aux loss before CutMix
         y_hard = y.clone() if y.dim() == 1 else y.argmax(dim=1)
+        x_clean = x.clone() if args.aux_weight > 0 else None
 
         if args.cutmix:
             cut_size = getattr(args, 'cutmix_size', None)
@@ -563,9 +615,9 @@ for epoch in range(start_epoch, NUM_ADV_EPOCHS + 1):
             attack=args.attack, label_smoothing=args.label_smoothing,
         )
 
-        # Aux CE loss on sub-model logits (parallel-specific)
+        # Aux CE loss on sub-model logits (use clean x to match hard labels)
         if args.aux_weight > 0:
-            aux_out = model(x, return_aux=True)
+            aux_out = model(x_clean, return_aux=True)
             sub_logits = aux_out[:-1]
             loss = loss + aux_ce_loss(sub_logits, y_hard, class_splits, device, weight=args.aux_weight)
 
