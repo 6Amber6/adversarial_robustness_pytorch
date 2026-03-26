@@ -177,6 +177,8 @@ parse.add_argument('--num-groups', type=int, default=2,
 parse.add_argument('--epochs-sub', type=int, default=100, help='Stage 1 CE epochs per sub-model.')
 parse.add_argument('--epochs-warmup', type=int, default=10, help='Stage 2 CE warmup epochs.')
 parse.add_argument('--aux-weight', type=float, default=0.02, help='Aux CE loss weight.')
+parse.add_argument('--bn-freeze-epochs', type=int, default=-1,
+                   help='Epochs to keep BN frozen after warmup. -1=permanent, 0=no freeze.')
 
 args = parse.parse_args()
 
@@ -537,9 +539,16 @@ del resume_ckpt  # free memory
 # =========================================================
 # Stage 2b: TRADES + EMA (matches baseline train-wa.py)
 # =========================================================
-BN_UNFREEZE_EPOCH = int(NUM_ADV_EPOCHS * 0.25)  # Unfreeze BN at 25% of training
-bn_unfrozen = start_epoch > BN_UNFREEZE_EPOCH
-if bn_unfrozen:
+# BN freeze schedule: -1=permanent, 0=no freeze, N=unfreeze at epoch N
+if args.bn_freeze_epochs < 0:
+    BN_UNFREEZE_EPOCH = NUM_ADV_EPOCHS + 1  # never unfreeze
+elif args.bn_freeze_epochs == 0:
+    BN_UNFREEZE_EPOCH = 0  # no freeze at all
+else:
+    BN_UNFREEZE_EPOCH = args.bn_freeze_epochs
+
+bn_unfrozen = (BN_UNFREEZE_EPOCH == 0) or (start_epoch > BN_UNFREEZE_EPOCH)
+if bn_unfrozen and BN_UNFREEZE_EPOCH > 0:
     unfreeze_bn(model)
     unfreeze_bn(wa_model)
 
@@ -547,7 +556,7 @@ logger.log(f'\n--- TRADES Training (epoch {start_epoch}-{NUM_ADV_EPOCHS}) ---')
 logger.log(f'  batch_size={args.batch_size}, lr={args.lr}, beta={args.beta}, '
            f'scheduler={args.scheduler}, tau={args.tau}')
 logger.log(f'  cutmix={args.cutmix}, label_smoothing={args.label_smoothing}')
-logger.log(f'  bn_frozen={not bn_unfrozen}, unfreeze_at={BN_UNFREEZE_EPOCH}')
+logger.log(f'  bn_freeze={"permanent" if BN_UNFREEZE_EPOCH > NUM_ADV_EPOCHS else BN_UNFREEZE_EPOCH}')
 
 for epoch in range(start_epoch, NUM_ADV_EPOCHS + 1):
     start_t = time.time()

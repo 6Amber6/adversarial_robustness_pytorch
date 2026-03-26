@@ -50,6 +50,7 @@ python train-wa-parallel.py \
   --epochs-warmup 10 \
   --aux-weight 0.02 \
   --clip-grad 5.0 \
+  --bn-freeze-epochs 100 \
   --unsup-fraction 0.0 \
   --aux-data-filename None
 
