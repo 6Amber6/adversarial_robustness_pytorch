@@ -36,7 +36,7 @@ mkdir -p logs
 python train-wa-parallel.py \
   --data-dir ~/data/cifar100s \
   --log-dir ~/logs \
-  --desc parallel-cifar100-wrn28-10-4g \
+  --desc parallel-cifar100-wrn34-10-4g \
   --data cifar100s \
   --depth 34 --width 10 \
   --num-groups 4 \
