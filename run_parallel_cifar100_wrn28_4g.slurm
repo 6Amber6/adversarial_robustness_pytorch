@@ -11,15 +11,15 @@
 #SBATCH --error=logs/%x-%j.err
 
 # ============================================================
-# Parallel Concat Fusion: CIFAR-100, WRN-28-10-Swish x 4
+# Parallel Concat Fusion: CIFAR-100, WRN-34-10-Swish x 4
 #   Split: textured_organic / smooth_organic / rigid_manmade / large_structures
 #   (25 classes each, semantic superclass grouping)
 #
-# Stage 1: CE pre-train 4 sub-models, 100 epochs
-# Stage 2a: CE warmup fusion, 10 epochs
+# Stage 1: CE pre-train 4 sub-models, 80 epochs
+# Stage 2a: CE warmup fusion, 20 epochs
 # Stage 2b: TRADES + EMA + MultiStepLR [200,300], 400 epochs
 #
-# NOTE: 4 sub-models (~146M params), uses 3 GPUs
+# NOTE: 4 sub-models (~184M params), uses 3 GPUs
 # ============================================================
 
 set -e
@@ -38,7 +38,7 @@ python train-wa-parallel.py \
   --log-dir ~/logs \
   --desc parallel-cifar100-wrn28-10-4g \
   --data cifar100s \
-  --depth 28 --width 10 \
+  --depth 34 --width 10 \
   --num-groups 4 \
   --batch-size 256 \
   --lr 0.1 \
