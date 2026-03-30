@@ -29,6 +29,10 @@ conda activate robustness
 cd /home/tong.li003/adversarial_robustness_pytorch
 export PYTHONPATH=/home/tong.li003/adversarial_robustness_pytorch:$PYTHONPATH
 
+# MIG instances do not support NCCL P2P
+export NCCL_P2P_DISABLE=1
+export NCCL_SHM_DISABLE=1
+
 mkdir -p logs
 
 python train-wa-parallel.py \
