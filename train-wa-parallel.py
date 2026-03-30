@@ -356,7 +356,8 @@ if start_stage == 'sub':
         )
 
         for ep in range(1, args.epochs_sub + 1):
-            _, acc = train_ce_epoch(sub, sub_loaders[name], opt, num_classes=len(classes))
+            _, acc = train_ce_epoch(sub, sub_loaders[name], opt,
+                                    num_classes=len(classes) if args.cutmix else None)
             sched.step()
             if ep % 10 == 0 or ep == args.epochs_sub:
                 test_acc_sub = eval_acc(sub, sub_test_loaders[name], device)

@@ -24,7 +24,7 @@ mkdir -p logs
 python eval-aa-parallel.py \
   --data-dir ~/data/cifar100s \
   --log-dir ~/logs \
-  --desc parallel-cifar100-wrn28-10-2g-cutmix \
+  --desc parallel-cifar100-wrn28-10-2g \
   --version standard
 
 echo "AutoAttack evaluation completed."

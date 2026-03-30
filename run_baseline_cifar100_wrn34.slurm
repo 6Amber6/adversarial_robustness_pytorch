@@ -12,7 +12,7 @@
 
 # ============================================================
 # Gowal et al., 2020 Baseline: CIFAR-100, WRN-34-10-Swish
-# TRADES + EMA, cosinew scheduler, no CutMix, no extra data
+# TRADES + EMA, MultiStepLR [200,300], no CutMix, no extra data
 # ============================================================
 
 set -e
@@ -38,6 +38,7 @@ python train-wa.py \
   --weight-decay 5e-4 \
   --tau 0.999 \
   --num-adv-epochs 400 \
+  --scheduler step --scheduler-milestones 200 300 \
   --unsup-fraction 0.0 \
   --aux-data-filename None
 

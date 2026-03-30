@@ -15,9 +15,9 @@
 #
 # Stage 1: CE pre-train 2 sub-models (vehicle/animal), 100 epochs
 # Stage 2a: CE warmup fusion, 10 epochs
-# Stage 2b: TRADES + EMA + CutMix, 400 epochs
+# Stage 2b: TRADES + EMA + MultiStepLR [200,300], 400 epochs
 #
-# All Stage 2 hyperparameters match baseline (Rebuffi 2021)
+# All Stage 2 hyperparameters match baseline (Gowal 2020)
 # Parallel-specific: backbone_lr_ratio, aux_ce_loss
 # ============================================================
 
@@ -35,7 +35,7 @@ mkdir -p logs
 python train-wa-parallel.py \
   --data-dir ~/data/cifar10s \
   --log-dir ~/logs \
-  --desc parallel-cifar10-wrn34-10-cutmix \
+  --desc parallel-cifar10-wrn34-10 \
   --data cifar10s \
   --depth 34 --width 10 \
   --num-groups 2 \
@@ -44,8 +44,8 @@ python train-wa-parallel.py \
   --beta 6.0 \
   --weight-decay 5e-4 \
   --tau 0.999 \
-  --cutmix \
   --num-adv-epochs 400 \
+  --scheduler step --scheduler-milestones 200 300 \
   --epochs-sub 80 \
   --epochs-warmup 10 \
   --aux-weight 0.02 \

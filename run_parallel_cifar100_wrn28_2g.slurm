@@ -16,7 +16,7 @@
 #
 # Stage 1: CE pre-train 2 sub-models, 100 epochs
 # Stage 2a: CE warmup fusion, 10 epochs
-# Stage 2b: TRADES + EMA + CutMix, 400 epochs
+# Stage 2b: TRADES + EMA + MultiStepLR [200,300], 400 epochs
 # ============================================================
 
 set -e
@@ -33,7 +33,7 @@ mkdir -p logs
 python train-wa-parallel.py \
   --data-dir ~/data/cifar100s \
   --log-dir ~/logs \
-  --desc parallel-cifar100-wrn28-10-2g-cutmix \
+  --desc parallel-cifar100-wrn28-10-2g \
   --data cifar100s \
   --depth 28 --width 10 \
   --num-groups 2 \
@@ -42,8 +42,8 @@ python train-wa-parallel.py \
   --beta 6.0 \
   --weight-decay 5e-4 \
   --tau 0.999 \
-  --cutmix \
   --num-adv-epochs 400 \
+  --scheduler step --scheduler-milestones 200 300 \
   --epochs-sub 100 \
   --epochs-warmup 20 \
   --aux-weight 0.1 \
